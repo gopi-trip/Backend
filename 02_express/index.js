@@ -1,85 +1,64 @@
-import logger from "./logger.js";
-import morgan from "morgan";
-import express from 'express';
-import 'dotenv/config'
+import express from 'express'
 const app = express();
-const port = process.env.PORT || 3000;
-const morganFormat = ":method :url :status :response-time ms";
+const port = 3000;
 
-app.use(
-    morgan(morganFormat, {
-      stream: {
-        write: (message) => {
-          const logObject = {
-            method: message.split(" ")[0],
-            url: message.split(" ")[1],
-            status: message.split(" ")[2],
-            responseTime: message.split(" ")[3],
-          };
-          logger.info(JSON.stringify(logObject));
-        },
-      },
-    })
-  );
-
-
+//For accepting data from the frontend side
 app.use(express.json())
 
-let teaData = []
-let nextId = 1
+const cityData = [];
+let index = 1;
 
-//Add a new Tea
-app.post('/teas',(req,res) => {
-    //Body is an object
-    const {name,price} = req.body
-    const newTea = {
-        id:nextId++,
+//Adding a city to cityData
+app.post('/city',(req,res) => {
+    const {name,code} = req.body
+    let city = {
+        id:index++,
         name:name,
-        price:price
+        code:code
     }
-    teaData.push(newTea)
-    res.status(201).send(newTea)
+    cityData.push(city);
+    res.send(city).status(201)
 })
 
-//Get all teas
-app.get('/teas', (req,res) => {
-    res.status(200).send(teaData);
+//Displaying all cities
+app.get('/cities',(req,res) => {
+    res.send(cityData).status(200)
 })
 
-//Get a tea with a particular ID
-app.get('/tea/:id',(res,req) => {
-    const tea = teaData.find(tea => tea.id === parseInt(req.params.id))
-    if(!tea){
-         res.status(404).send('Tea not found')
+//Display City with a particular ID
+app.get('/cities/:id',(req,res) => {
+    const city = cityData.find(city => city.id === parseInt(req.params.id));
+    if(!city){
+        res.status(404).send("City Not Found")
     }else{
-        res.status(201).send(tea)
+        res.status(200).send(city)
     }
 })
 
-//Update Tea
-app.put('/teas/:id',(req,res) => {
-    const tea = teaData.find(tea => tea.id === parseInt(req.params.id));
-    if(!tea){
-        return res.status(404).send('Tea not found')
+//Update City
+app.put('/cities/:id',(req,res) => {
+    const city = cityData.find(city => city.id === parseInt(req.params.id));
+    if(!city){
+        res.status(404).send("City Not Found")
+    }else{
+        city.name = req.body.name;
+        city.code = req.body.code
+        res.status(200).send(city)
     }
-    const {name,price} = req.body;
-    tea.name = name;
-    tea.price = price;
-    res.status(200).send(tea);
 })
 
-//Deleting Tea
-app.delete('/teas/:id',(req,res) => {
-    const index = teaData.findIndex((tea) => tea.id === parseInt(req.params.id))
+//Delete City
+app.delete('/cities/:id',(req,res) => {
+    const index = cityData.findIndex(city => city.id === parseInt(req.params.id))
     if(index === -1){
-        res.status(404).send('Tea not found')
+        res.status(404).send("City Not Found")
     }else{
-        teaData.splice(index,1)
-        res.status(204).send('Tea Deleted')
+       cityData.splice(index,1)
+       res.status(200).send("Deleted City")
     }
 })
 
-//Listening 
+
 app.listen(port,() => {
-    console.log(`Server is listening at port: ${port}...`);
+    console.log(`Server is listening at port ${port}....`);
 })

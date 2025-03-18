@@ -17,4 +17,11 @@ app.use(
 app.use(express.urlencoded({extended: true,limit:"16kb"}))
 
 app.use(express.static("public"))
+
+//Routes
+import healthCheckRouter from './routes/healthCheck.routes.js'
+
+//Creating a route
+app.use('/api/v1/heathCheck',healthCheckRouter)
 export {app} 
+ 

@@ -6,7 +6,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
   },
   "keywords": [
     "nodejs",
@@ -21,6 +21,9 @@
     "prettier": "^3.5.3"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "course": "^0.0.1",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "mongoose": "^8.12.1"
   }

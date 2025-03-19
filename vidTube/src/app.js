@@ -1,5 +1,7 @@
 import express from 'express'
-import cors from 'cors'
+import cors from 'cors' //To decide who can talk to our backend
+
+//Creating an app from express
 const app = express();
 
 app.use(

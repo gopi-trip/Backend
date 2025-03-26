@@ -3,7 +3,7 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 
 const healthCheck = asyncHandler(
     async (req,res) => {
-        return res.status(200).json(new apiResponse(200,"OK","All is fine"));
+        return res.status(200).json(new apiResponse(200,"OK","Health Check passed"));
     }
 )
 

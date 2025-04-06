@@ -117,6 +117,7 @@ const registerUser = asyncHandler(
             .json(new apiResponse(201,createdUser,"User registered successfully"))
     } catch (error) {
         console.log("User Creation failed");
+        //Remove the avatar and cover images
         if(avatar){
             await deleteFromCloudinary(avatar.public_id)
         }

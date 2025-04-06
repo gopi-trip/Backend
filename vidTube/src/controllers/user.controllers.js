@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import {apiError} from '../utils/apiError.js'
-import {User} from '../models/user.models.js'
-import {uploadOnCloudinary,deleteFromCloudinary} from '../utils/cloudinary.js'
+import { apiError } from '../utils/apiError.js'
+import { User } from '../models/user.models.js'
+import { uploadOnCloudinary,deleteFromCloudinary } from '../utils/cloudinary.js'
 import { apiResponse } from "../utils/apiResponse.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -23,33 +23,41 @@ const generateAccessAndRefreshTokens = async (userId) => {
 
 const registerUser = asyncHandler(
     async (req,res) => {
-        const {fullname,email,username,password} = req.body
+        //Step-1 - Accept data from the user
+        const { fullname,email,username,password } = req.body
 
-        //Validaion - ??
+        //Validaion (Only for name)
         /* if(fullname?.trim() === ''){
             throw new apiError(400,"Full name is required")
         } */
+
+        //Validation for each field
        if(
         [fullname,username,email,password].some(field => field?.trim() === "")
        ){
         throw new apiError(400,"All fields are required")
        }
 
+    // Finding user using the username or email
     const existedUser = await User.findOne({
-        $or: [{username},{email}]
+        $or: [{ username },{ email }] 
     })
 
+    //If user exists, throw an error
     if(existedUser){
-        throw new apiError(400,"User with this email or username already exists")
+        throw new apiError(409,"User with this email or username already exists")
     }
+
     console.warn(req.files);
     const avatarLocalPath = req.files?.avatar?.[0]?.path
     const coverImageLocalPath = req.files?.coverImage?.[0]?.path
 
+    //If avatar isn't there then throw an error
     if(!avatarLocalPath){
         throw new apiError(400,"Avatar file is missing!")
     }
 
+    //Edit: Previous Uploading process for avatar and cover image files 
   /*   const avatar = await uploadOnCloudinary(avatarLocalPath)
     const coverImage = ""
     if(!coverImageLocalPath){
@@ -58,6 +66,7 @@ const registerUser = asyncHandler(
         coverImage = await uploadOnCloudinary(coverImageLocalPath)
     } */
     
+    //Uploading the avatar file to Cloudinary
     let avatar;
     try {
         avatar = await uploadOnCloudinary(avatarLocalPath)
@@ -68,6 +77,7 @@ const registerUser = asyncHandler(
         throw new apiError(500,"Failed to upload avatar")
     }
 
+    //Uploading the cover image to Cloudinary
     let coverImage;
     try {
         coverImage = await uploadOnCloudinary(coverImageLocalPath)
@@ -78,7 +88,7 @@ const registerUser = asyncHandler(
         throw new apiError(500,"Failed to upload coverImage")
     }
 
-
+    //Creating a user (We've already checked if he/she exists or not)
     try {
         const user = await User.create({
             fullname,
@@ -88,15 +98,20 @@ const registerUser = asyncHandler(
             password,
             username: username.toLowerCase()
         });
-    
+        
+        //Verify if the user was created or not
+        //So, we fetch the user using its _id (using MongoDB)
+        //We're intentionally deselecting certain fields such as the password and the refresh token so we don't fetch that
         const createdUser = await User.findById(user._id).select(
             "-password -refreshToken"
         )
-    
+        
+        //Now we check if the user was created or not
         if(!createdUser){
             throw new apiError(500,"Something went wrong while registering a user")
         }
-    
+        
+        //All goes superb! So, we send the response to the frontend.
         return res
             .status(201)
             .json(new apiResponse(201,createdUser,"User registered successfully"))
@@ -109,7 +124,7 @@ const registerUser = asyncHandler(
             await deleteFromCloudinary(coverImage.public_id)
         }
         throw new apiError(500,"Something went wrong while registering a user and Images were deleted")
-    }
+        }
     }
 )
 

@@ -22,9 +22,8 @@ app.use(express.static("public"))
 
 //Routes
 import healthCheckRouter from './routes/healthCheck.routes.js'
-
 import userRouter from './routes/user.routes.js'
-import { errorHandler } from './middlewares/error.middlewares.js';
+// import { errorHandler } from './middlewares/error.middlewares.js';
 
 
 //Creating a route

@@ -4,6 +4,7 @@ import { User } from '../models/user.models.js'
 import { uploadOnCloudinary,deleteFromCloudinary } from '../utils/cloudinary.js'
 import { apiResponse } from "../utils/apiResponse.js";
 
+//Give user the refresh token
 const generateAccessAndRefreshTokens = async (userId) => {
    try {
      const user = await User.findById(userId)
@@ -129,6 +130,7 @@ const registerUser = asyncHandler(
     }
 )
 
+//Route for .....?
 const loginUser = asyncHandler(
     async(req,res) => {
         //1.Get data from body
@@ -138,6 +140,7 @@ const loginUser = asyncHandler(
             throw new apiError(400,"Email is required")
         }
 
+        //Find the user either by username or email
         const user = await User.findOne({
             $or: [{username},{email}]
         })
@@ -153,8 +156,10 @@ const loginUser = asyncHandler(
             throw new apiError(401,"Invalid Credentials")
         }
 
+        //Generate access and refresh tokens
         const {accessToken,refreshToken} = await generateAccessAndRefreshTokens(user._id)
-
+        
+        //Grab the logged in user
         const loggedInUser = await User.findById(user._id)
             .select("-password -refreshToken")
 
@@ -169,7 +174,7 @@ const loginUser = asyncHandler(
             .cookie("accessToken",accessToken,options)
             .cookie("refreshToken",refreshToken,options)
             .json(new apiResponse(
-                200,
+                200, 
                 { user: loggedInUser,accessToken,refreshToken },
                 "User logged in successfully"
             ))

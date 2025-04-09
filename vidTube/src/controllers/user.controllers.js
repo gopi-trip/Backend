@@ -3,7 +3,7 @@ import { apiError } from '../utils/apiError.js'
 import { User } from '../models/user.models.js'
 import { uploadOnCloudinary,deleteFromCloudinary } from '../utils/cloudinary.js'
 import { apiResponse } from "../utils/apiResponse.js";
-
+import jwt from 'jsonwebtoken'
 //Give user the refresh token
 const generateAccessAndRefreshTokens = async (userId) => {
    try {
@@ -182,8 +182,63 @@ const loginUser = asyncHandler(
     }
 )
 
+const logoutUser = asyncHandler(
+    async(req,res) =>{
+        await User.findByIdAndUpdate(
+            //Need to comeback here after middleware
+            req.user._id,
+        )
+    }
+)
+
+const refreshAccessToken = asyncHandler(
+    async(req,res) => {
+        const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+
+        if(!incomingRefreshToken){
+            throw new Error(401,"Refresh token is required")
+        }
+
+        try {
+           const decodedToken =  jwt.verify(
+                incomingRefreshToken,
+                process.env.REFRESH_TOKEN_SECRET
+            )
+            const user = await User.findById(decodedToken?._id)
+
+            if(!user){
+                throw new apiError(401,"Invalid refresh token")
+            }
+
+            if(user?.refreshToken !== incomingRefreshToken){
+                throw new apiError(401,"Refresh Token is expired")
+            }
+
+            const options = {
+                httpOnly:true,
+                secure: process.env.NODE_ENV === "production",
+            }
+          const {accessToken,refreshToken: newRefreshToken} = await generateAccessAndRefreshTokens(user._id)
+
+          return res
+                .status(200)
+                .cookie("accessToken",accessToken,options)
+                .cookie("refreshToken",newRefreshTokenefreshToken,options)
+                .json(new apiResponse(
+                    200,
+                    {accessToken,
+                        refreshToken:newRefreshToken
+                    },
+                    "Access token refreshed successfully"
+                ))
+        }catch (error) {
+            throw new apiError(500,"Something went wrong while generating access token")
+        }
+    }
+)
 
 export { 
     registerUser,
-    loginUser
+    loginUser,
+    refreshAccessToken
  }

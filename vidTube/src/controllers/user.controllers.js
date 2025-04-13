@@ -39,7 +39,7 @@ const registerUser = asyncHandler(
         throw new apiError(400,"All fields are required")
        }
 
-    // Finding user using the username or email
+    // Finding user using the username or email to check if he/she exists
     const existedUser = await User.findOne({
         $or: [{ username },{ email }] 
     })
@@ -57,15 +57,6 @@ const registerUser = asyncHandler(
     if(!avatarLocalPath){
         throw new apiError(400,"Avatar file is missing!")
     }
-
-    //Edit: Previous Uploading process for avatar and cover image files 
-  /*   const avatar = await uploadOnCloudinary(avatarLocalPath)
-    const coverImage = ""
-    if(!coverImageLocalPath){
-        throw new apiError(400,"Cover Image is missing!")
-    }else{
-        coverImage = await uploadOnCloudinary(coverImageLocalPath)
-    } */
     
     //Uploading the avatar file to Cloudinary
     let avatar;
@@ -102,7 +93,7 @@ const registerUser = asyncHandler(
         
         //Verify if the user was created or not
         //So, we fetch the user using its _id (using MongoDB)
-        //We're intentionally deselecting certain fields such as the password and the refresh token so we don't fetch that
+        //We're intentionally deselecting certain fields such as the password and the refresh token so we don't fetch them
         const createdUser = await User.findById(user._id).select(
             "-password -refreshToken"
         )

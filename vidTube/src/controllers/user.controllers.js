@@ -4,6 +4,7 @@ import { User } from '../models/user.models.js'
 import { uploadOnCloudinary,deleteFromCloudinary } from '../utils/cloudinary.js'
 import { apiResponse } from "../utils/apiResponse.js";
 import jwt from 'jsonwebtoken'
+import { verifyJWT } from "../middlewares/auth.middlewares.js";
 //Give user the refresh token
 const generateAccessAndRefreshTokens = async (userId) => {
    try {
@@ -178,7 +179,25 @@ const logoutUser = asyncHandler(
         await User.findByIdAndUpdate(
             //Need to comeback here after middleware
             req.user._id,
+            {
+                $set: {
+                    refreshToken: undefined
+                }
+            },
+            {
+                new:true
+            }
         )
+        const options = {
+            httpOnly:true,
+            secure:process.env.NODE_ENV === "production"
+        }
+
+        return res.status(200)
+            .clearCookie("acccessToken",options)
+            .clearCookie("refreshToken",options)
+            .json( new apiResponse(200,{},"User logged out successfully"))
+
     }
 )
 
@@ -231,5 +250,6 @@ const refreshAccessToken = asyncHandler(
 export { 
     registerUser,
     loginUser,
-    refreshAccessToken
+    refreshAccessToken,
+    logoutUser
  }

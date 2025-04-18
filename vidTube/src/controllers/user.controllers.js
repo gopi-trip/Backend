@@ -142,6 +142,8 @@ const loginUser = asyncHandler(
         }
 
         //3.Validate Password
+        
+        
         const isPasswordValid = await user.isPasswordCorrect(password)
         
         if(!isPasswordValid){
